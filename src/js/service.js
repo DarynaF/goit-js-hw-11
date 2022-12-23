@@ -18,6 +18,7 @@ const fetchImages = async input => {
 
   const { data } = await axios.get('?' + queryParams.toString());
   return data;
+  
 };
 
 export default fetchImages;

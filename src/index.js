@@ -31,10 +31,18 @@ const validate = async () => {
     const res = await fetchImages(input.value);
     variables.totalPages = Math.ceil(res.totalHits / variables.limit);
 
-    if (res.hits.length === 0) {
+    if (input.value.length === 0 ) {
       Notify.failure('Sorry, there are no images matching your search query. Please try again.');
       return;
     }
+    if (res.totalHits.length === 0 ) {
+      Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+      return;
+    }
+     if ( input.value === ' ') {
+      Notify.failure('Sorry, there are no images matching your search query. Please try again.');
+      return;
+     }
 
     if (variables.page >= variables.totalPages) {
       loadMoreBtn.style.display = 'none';
