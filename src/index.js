@@ -39,7 +39,7 @@ const validate = async () => {
       Notify.failure('Sorry, there are no images matching your search query. Please try again.');
       return;
     }
-     if ( input.value === ' ') {
+     if ( input.value !== /^[a-zа-яё]+$/ ) {
       Notify.failure('Sorry, there are no images matching your search query. Please try again.');
       return;
      }
