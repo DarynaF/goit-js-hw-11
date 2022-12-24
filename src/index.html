@@ -1,27 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Homework 11</title>
+    <title>PicSearch</title>
+    <link rel="stylesheet" href="./sass/index.scss" />
+      
+    
+
+
   </head>
   <body>
     <form class="search-form" id="search-form">
-      <input
-        type="text"
-        name="searchQuery"
-        autocomplete="off"
-        placeholder="Search images..."
-        class="search-input"
-      />
-      <button type="submit" class="search-button">&#128269;</button>
+      <input type="text" name="searchQuery" autocomplete="off" placeholder="Search images..." />
+      <button type="submit">
+        <img src="https://icon-library.com/images/search-icon-svg/search-icon-svg-16.jpg" alt="serch" width="30" />
+      </button>
     </form>
 
-    <div class="gallery"></div>
-
-    <button type="button" class="load-more">Load more</button>
-
-    <script src="index.js" type="module"></script>
+      <div class="gallery-container">
+        <div class="gallery"></div>
+        <div class="button-box">
+          <button type="button" class="load-more">More</button>
+        </div>  
+      </div>
+      
+      <script src="./index.js" type="module" ></script>
   </body>
 </html>

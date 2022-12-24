@@ -1,81 +1,111 @@
-import './css/styles.css';
-
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import { variables } from './js/variables';
+import ApiService from './js/api-service';
+import Notiflix from 'notiflix';
+import { render } from './js/render';
 import SimpleLightbox from 'simplelightbox';
+import './sass/index.scss';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-import fetchImages from './js/service';
-import imageGallery from './js/gallery';
+const lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+  scrollZoom: false,
+});
 
+const refs = {
+  inputEl: document.querySelector('#search-form'),
 
-const form = document.querySelector('form');
-const input = document.querySelector('input');
-const loadMoreBtn = document.querySelector('.load-more');
-const gallery = document.querySelector('.gallery');
-
-loadMoreBtn.style.display = 'none';
-
-const onGallery = arr => {
-  const markup = arr.map(image => imageGallery(image)).join('');
-  gallery.insertAdjacentHTML('beforeend', markup);
-  let lightbox = new SimpleLightbox('.photo-card a', {
-    captions: true,
-    captionsData: 'alt',
-    captionDelay: 250,
-  });
+  submitBtn: document.querySelector('button'),
+  gallery: document.querySelector('.gallery'),
+  loadMoreBtn: document.querySelector('.load-more'),
 };
+const perPage = 40;
 
-const validate = async () => {
-  try {
-    const res = await fetchImages(input.value);
-    variables.totalPages = Math.ceil(res.totalHits / variables.limit);
+const apiService = new ApiService();
+// console.log(apiService.page);
+refs.inputEl.addEventListener('submit', onSubmitClick);
+refs.loadMoreBtn.addEventListener('click', onLoadMore);
 
-    if (input.value.length === 0 ) {
-      Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-      return;
-    }
-    if (res.totalHits.length === 0 ) {
-      Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-      return;
-    }
-     if ( input.value !== /^[a-zа-яё]+$/ ) {
-      Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-      return;
-     }
+function onSubmitClick(event) {
+  event.preventDefault();
+  clearRender();
 
-    if (variables.page >= variables.totalPages) {
-      loadMoreBtn.style.display = 'none';
-      Notify.info("We're sorry, but you've reached the end of search results.");
-    }
-
-    if (variables.page === 1 && res.hits.length > 0) {
-      loadMoreBtn.style.display = 'block';
-      Notify.success(`Hoorey! We found ${res.totalHits} images`);
-    }
-
-    onGallery(res.hits);
-  } catch (err) {
-    Notify.failure(err);
+  apiService.query = event.target.elements.searchQuery.value;
+  if (apiService.query.trim() === '') {
+    return Notiflix.Notify.failure('Please entrer search query');
   }
-};
+  apiService.resetPage();
+// ..............................................................................................................
+  apiService.searchImages().then(response => {
+    if (response.data.hits.length === 0) {
+      Notiflix.Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+      return;
+    }
+      if (response.data.totalHits === 0) {
+        ifError();
+      }
+      Notiflix.Notify.success(
+        `Hooray! We found ${response.data.totalHits} images.`
+      );
+      render(response);
+      showButton();
+      lightbox.refresh();
+    
 
-const searchImages = e => {
-  e.preventDefault();
-  gallery.innerHTML = '';
-  loadMoreBtn.style.display = 'none';
-  variables.page = 1;
+        const totalPages = Math.ceil(response.data.totalHits / perPage);
+        if (apiService.page > totalPages) {
+          refs.loadMoreBtn.classList.add('is-hidden');
 
-  validate();
-};
+          // ifError();
+          hideButton();
+          return;
+        }
+      });
+      // console.log("apiService.fetchImages in INDEX", apiService.searchImages())
+    }
 
-const loadMore = () => {
-  variables.page += 1;
+async function onLoadMore() {
+  
+  await apiService.searchImages().then(response => {
+    // console.log('response in onloadMore', response);
+    if (response.data.hits.length === 0) {
+      ifError();
+      return;
+    }
 
-  validate();
-};
+    render(response);
+    // console.log('+');
+    lightbox.refresh();
+    const totalPages = Math.ceil(response.data.totalHits / perPage);
 
-form.addEventListener('submit', searchImages);
-loadMoreBtn.addEventListener('click', loadMore);
+    if (apiService.page > totalPages) {
+      refs.loadMoreBtn.classList.add('is-hidden');
 
-//
+      ifError();
+      
+      return ;
+    }
+  });
+}
+
+// console.log('onLoadMore', onLoadMore());
+
+
+
+function clearRender() {
+  refs.gallery.innerHTML = '';
+}
+
+function ifError() {
+  Notiflix.Notify.failure(
+    "Sorry, but you've reached the end of search results"
+  );
+}
+
+function hideButton() {
+  refs.loadMoreBtn.classList.add('is-hidden');
+}
+function showButton() {
+  refs.loadMoreBtn.classList.remove('is-hidden');
+}
